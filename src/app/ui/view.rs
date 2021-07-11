@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use battery::units;
 
-use super::{ChartData, ChartType, Units};
+use super::{ChartData, ChartType};
 use crate::app::Config;
 use crate::Result;
 
@@ -13,7 +13,6 @@ pub struct View {
     battery: battery::Battery,
     voltage: ChartData,
     energy_rate: ChartData,
-    temperature: ChartData,
 }
 
 impl View {
@@ -23,7 +22,6 @@ impl View {
             battery,
             voltage: ChartData::new(config.clone(), ChartType::Voltage),
             energy_rate: ChartData::new(config.clone(), ChartType::EnergyRate),
-            temperature: ChartData::new(config, ChartType::Temperature),
         }
     }
 
@@ -38,18 +36,6 @@ impl View {
         self.energy_rate
             .push(self.battery.energy_rate().get::<units::power::watt>());
         *self.energy_rate.battery_state() = self.battery.state();
-
-        if let Some(temp) = self.battery.temperature() {
-            let value = match self.config.units() {
-                Units::Human => temp.get::<units::thermodynamic_temperature::degree_celsius>(),
-                Units::Si => temp.get::<units::thermodynamic_temperature::kelvin>(),
-            };
-            self.temperature.push(value);
-            *self.temperature.battery_state() = self.battery.state();
-            self.temperature.enabled(true);
-        } else {
-            self.temperature.enabled(false);
-        }
 
         Ok(())
     }
@@ -85,10 +71,6 @@ impl View {
 
     pub fn energy_rate(&self) -> &ChartData {
         &self.energy_rate
-    }
-
-    pub fn temperature(&self) -> &ChartData {
-        &self.temperature
     }
 
     pub fn config(&self) -> &Config {

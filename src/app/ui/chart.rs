@@ -2,12 +2,10 @@ use std::sync::Arc;
 
 use battery::units::electric_potential::volt;
 use battery::units::power::watt;
-use battery::units::thermodynamic_temperature::{degree_celsius, kelvin};
 use battery::units::Unit;
 use battery::State;
 use itertools::{Itertools, MinMaxResult};
 
-use super::Units;
 use crate::app::Config;
 
 const RESOLUTION: usize = 512;
@@ -16,7 +14,6 @@ const RESOLUTION: usize = 512;
 pub enum ChartType {
     Voltage,
     EnergyRate,
-    Temperature,
 }
 
 #[derive(Debug)]
@@ -47,10 +44,6 @@ impl ChartData {
             value_min: 100.0,
             value_max: 0.0,
         }
-    }
-
-    pub fn enabled(&mut self, value: bool) {
-        self.enabled = value;
     }
 
     pub fn battery_state(&mut self) -> &mut State {
@@ -97,7 +90,6 @@ impl ChartData {
                 State::Discharging => "Discharging with",
                 _ => "Consumption",
             },
-            ChartType::Temperature => "Temperature",
         }
     }
 
@@ -107,10 +99,6 @@ impl ChartData {
             match self.chart_type {
                 ChartType::Voltage => format!("{:.2} {}", self.value_latest, volt::abbreviation()),
                 ChartType::EnergyRate => format!("{:.2} {}", self.value_latest, watt::abbreviation()),
-                ChartType::Temperature => match self.config.units() {
-                    Units::Human => format!("{:.2} {}", self.value_latest, degree_celsius::abbreviation()),
-                    Units::Si => format!("{:.2} {}", self.value_latest, kelvin::abbreviation()),
-                },
             }
         } else {
             "NOT AVAILABLE".to_string()
@@ -135,10 +123,6 @@ impl ChartData {
         match self.chart_type {
             ChartType::Voltage => volt::abbreviation(),
             ChartType::EnergyRate => watt::abbreviation(),
-            ChartType::Temperature => match self.config.units() {
-                Units::Human => degree_celsius::abbreviation(),
-                Units::Si => kelvin::abbreviation(),
-            },
         }
     }
 

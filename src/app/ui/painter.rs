@@ -48,7 +48,6 @@ use battery::units::electric_potential::volt;
 use battery::units::energy::{joule, watt_hour};
 use battery::units::power::watt;
 use battery::units::ratio::{percent, ratio};
-use battery::units::thermodynamic_temperature::{degree_celsius, kelvin};
 use battery::units::time::second;
 use battery::units::Unit;
 use battery::State;
@@ -99,10 +98,9 @@ impl<'i> Painter<'i> {
             .constraints(
                 [
                     Constraint::Length(3),  // percentage bar
-                    Constraint::Length(10), // common info
                     Constraint::Length(9),  // energy stuff
                     Constraint::Length(5),  // timings
-                    Constraint::Min(4),     // environment
+                    Constraint::Length(10), // common info
                 ]
                 .as_ref(),
             )
@@ -113,9 +111,8 @@ impl<'i> Painter<'i> {
             .direction(Direction::Vertical)
             .constraints(
                 [
-                    Constraint::Percentage(33), // Voltage
-                    Constraint::Percentage(33), // Consumption
-                    Constraint::Percentage(34), // Temperature
+                    Constraint::Percentage(50), // Voltage
+                    Constraint::Percentage(50), // Consumption
                 ]
                 .as_ref(),
             )
@@ -124,13 +121,11 @@ impl<'i> Painter<'i> {
         // Drawing all the things now!
         self.draw_tabs(&mut frame, main[0]);
         self.draw_state_of_charge_bar(&mut frame, left_column[0]);
-        self.draw_common_info(&mut frame, left_column[1]);
-        self.draw_energy_info(&mut frame, left_column[2]);
-        self.draw_timing_info(&mut frame, left_column[3]);
-        self.draw_environment_info(&mut frame, left_column[4]);
+        self.draw_energy_info(&mut frame, left_column[1]);
+        self.draw_timing_info(&mut frame, left_column[2]);
+        self.draw_common_info(&mut frame, left_column[3]);
         self.draw_chart(&self.view.voltage(), &mut frame, right_column[0]);
         self.draw_chart(&self.view.energy_rate(), &mut frame, right_column[1]);
-        self.draw_chart(&self.view.temperature(), &mut frame, right_column[2]);
     }
 
     pub fn draw_tabs<B: Backend>(&self, frame: &mut Frame<B>, area: Rect) {
@@ -336,25 +331,6 @@ impl<'i> Painter<'i> {
 
         let items = vec![["Time to full", time_to_full], ["Time to empty", time_to_empty]];
         let header = ["Time", ""];
-
-        self.draw_info_table(header, &items, block, frame, area);
-    }
-
-    fn draw_environment_info<B: Backend>(&self, frame: &mut Frame<B>, area: Rect) {
-        let block = Block::default().borders(Borders::LEFT | Borders::RIGHT | Borders::BOTTOM);
-        let battery = self.view.battery();
-        let config = self.view.config();
-
-        let temperature = &match battery.temperature() {
-            Some(temp) => match config.units() {
-                Units::Human => format!("{:.2} {}", temp.get::<degree_celsius>(), degree_celsius::abbreviation()),
-                Units::Si => format!("{:.2} {}", temp.get::<kelvin>(), kelvin::abbreviation()),
-            },
-            None => "N/A".to_string(),
-        };
-
-        let items = vec![["Temperature", temperature]];
-        let header = ["Environment", ""];
 
         self.draw_info_table(header, &items, block, frame, area);
     }
